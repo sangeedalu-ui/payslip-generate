@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Employee Payslip Generator</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f0f2f5; color: #333; min-height: 100vh; }
+
+        .header { background: linear-gradient(135deg, #1a237e, #283593); color: white; padding: 40px 20px; text-align: center; }
+        .header h1 { font-size: 2.2em; font-weight: 300; letter-spacing: 2px; margin-bottom: 8px; }
+        .header p { font-size: 1em; opacity: 0.85; }
+
+        .container { max-width: 700px; margin: -40px auto 40px; padding: 0 20px; }
+
+        .card { background: white; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); padding: 40px; }
+        .card h2 { font-size: 1.4em; color: #1a237e; margin-bottom: 24px; padding-bottom: 12px; border-bottom: 2px solid #e8eaf6; }
+
+        .upload-area {
+            border: 3px dashed #c5cae9;
+            border-radius: 12px;
+            padding: 50px 30px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: #fafbff;
+        }
+        .upload-area:hover { border-color: #3f51b5; background: #e8eaf6; }
+        .upload-area.dragover { border-color: #1a237e; background: #c5cae9; }
+
+        .upload-icon { font-size: 3em; margin-bottom: 16px; color: #3f51b5; }
+        .upload-area p { font-size: 1.1em; color: #555; margin-bottom: 8px; }
+        .upload-area small { color: #999; }
+
+        .file-input { display: none; }
+
+        .btn {
+            display: inline-block; padding: 12px 32px;
+            border: none; border-radius: 8px; cursor: pointer;
+            font-size: 1em; font-weight: 600; text-decoration: none;
+            transition: all 0.3s;
+        }
+        .btn-primary { background: #1a237e; color: white; }
+        .btn-primary:hover { background: #283593; transform: translateY(-1px); }
+        .btn-primary:disabled { background: #9e9e9e; cursor: not-allowed; transform: none; }
+
+        .btn-row { text-align: center; margin-top: 24px; }
+
+        .flash { padding: 12px 16px; border-radius: 8px; margin-bottom: 20px; font-size: 0.95em; }
+        .flash-error { background: #ffebee; color: #c62828; border: 1px solid #ffcdd2; }
+        .flash-success { background: #e8f5e9; color: #2e7d32; border: 1px solid #c8e6c9; }
+        .flash-info { background: #e3f2fd; color: #1565c0; border: 1px solid #bbdefb; }
+
+        .features { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 32px; }
+        .feature { padding: 16px; background: #f5f7ff; border-radius: 8px; font-size: 0.9em; }
+        .feature strong { color: #1a237e; }
+
+        .footer { text-align: center; padding: 20px; color: #999; font-size: 0.85em; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>PAYSLIP GENERATOR</h1>
+        <p>Upload Excel data and generate professional employee payslips</p>
+    </div>
+
+    <div class="container">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% for cat, msg in messages %}
+                <div class="flash flash-{{ cat }}">{{ msg }}</div>
+            {% endfor %}
+        {% endwith %}
+
+        <div class="card">
+            <h2>Upload Salary Data</h2>
+            <form action="/upload" method="POST" enctype="multipart/form-data" id="uploadForm">
+                <div class="upload-area" id="dropZone" onclick="document.getElementById('fileInput').click()">
+                    <div class="upload-icon">&#128196;</div>
+                    <p>Drop your Excel file here or click to browse</p>
+                    <small>Supports .xlsx and .xls files</small>
+                    <input type="file" name="file" id="fileInput" class="file-input" accept=".xlsx,.xls" onchange="handleFile(this)">
+                </div>
+                <div id="fileName" style="margin-top:12px;text-align:center;color:#1a237e;font-weight:600;"></div>
+                <div class="btn-row">
+                    <button type="submit" class="btn btn-primary" id="uploadBtn" disabled>Upload & Preview</button>
+                </div>
+            </form>
+        </div>
+
+        <div class="features">
+            <div class="feature"><strong>Smart Column Detection</strong><br>Automatically identifies columns even with different names</div>
+            <div class="feature"><strong>Salary Verification</strong><br>Flags discrepancies between provided and calculated values</div>
+            <div class="feature"><strong>Professional PDFs</strong><br>Print-ready payslips with Indian Rupee formatting</div>
+            <div class="feature"><strong>Batch Processing</strong><br>Generate individual or combined PDFs for all employees</div>
+        </div>
+    </div>
+
+    <div class="footer">Employee Payslip Generator &mdash; Confidential</div>
+
+    <script>
+        const dropZone = document.getElementById('dropZone');
+        const fileInput = document.getElementById('fileInput');
+        const uploadBtn = document.getElementById('uploadBtn');
+        const fileName = document.getElementById('fileName');
+
+        dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('dragover'); });
+        dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
+        dropZone.addEventListener('drop', e => {
+            e.preventDefault();
+            dropZone.classList.remove('dragover');
+            if (e.dataTransfer.files.length) {
+                fileInput.files = e.dataTransfer.files;
+                handleFile(fileInput);
+            }
+        });
+
+        function handleFile(input) {
+            if (input.files.length) {
+                fileName.textContent = input.files[0].name;
+                uploadBtn.disabled = false;
+            }
+        }
+    </script>
+</body>
+</html>

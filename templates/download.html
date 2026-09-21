@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Download Payslips - Payslip Generator</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f0f2f5; color: #333; min-height: 100vh; }
+        .header { background: linear-gradient(135deg, #1a237e, #283593); color: white; padding: 30px 20px; text-align: center; }
+        .header h1 { font-size: 1.8em; font-weight: 300; letter-spacing: 2px; }
+        .header p { opacity: 0.85; margin-top: 6px; }
+        .container { max-width: 800px; margin: 20px auto; padding: 0 20px; }
+        .card { background: white; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); padding: 30px; margin-bottom: 20px; }
+        .card h2 { font-size: 1.3em; color: #1a237e; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 2px solid #e8eaf6; }
+        .success-icon { text-align: center; font-size: 3em; margin-bottom: 16px; }
+        .success-msg { text-align: center; font-size: 1.1em; color: #2e7d32; margin-bottom: 24px; }
+
+        .pdf-list { list-style: none; }
+        .pdf-item {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 12px 16px; border: 1px solid #e0e0e0; border-radius: 8px;
+            margin-bottom: 8px; transition: all 0.2s;
+        }
+        .pdf-item:hover { background: #f5f7ff; border-color: #c5cae9; }
+        .pdf-name { font-weight: 500; color: #333; font-size: 0.95em; }
+        .pdf-name small { display: block; color: #999; font-weight: normal; font-size: 0.85em; margin-top: 2px; }
+
+        .btn { display: inline-block; padding: 8px 20px; border: none; border-radius: 6px; cursor: pointer; font-size: 0.9em; font-weight: 600; text-decoration: none; transition: all 0.3s; }
+        .btn-download { background: #1a237e; color: white; }
+        .btn-download:hover { background: #283593; }
+        .btn-zip { background: #2e7d32; color: white; }
+        .btn-zip:hover { background: #388e3c; }
+        .btn-secondary { background: #e8eaf6; color: #1a237e; }
+        .btn-secondary:hover { background: #c5cae9; }
+
+        .btn-row { display: flex; gap: 12px; justify-content: center; margin-top: 24px; flex-wrap: wrap; }
+
+        .discrepancy-box { background: #fff3e0; border: 1px solid #ffcc80; border-radius: 8px; padding: 16px; margin-bottom: 20px; }
+        .discrepancy-box h3 { color: #e65100; font-size: 1em; margin-bottom: 10px; }
+        .discrepancy-item { font-size: 0.9em; margin-bottom: 8px; padding-bottom: 8px; border-bottom: 1px solid #ffe0b2; }
+        .discrepancy-item:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+        .discrepancy-item strong { color: #bf360c; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>PAYSLIPS GENERATED</h1>
+        <p>Your payslips are ready for download</p>
+    </div>
+
+    <div class="container">
+        <div class="card">
+            <div class="success-icon">&#9989;</div>
+            <div class="success-msg">Successfully generated {{ pdf_files|length }} payslip(s)</div>
+
+            <h2>Download Individual Payslips</h2>
+            <ul class="pdf-list">
+                {% for name, path in pdf_files %}
+                <li class="pdf-item">
+                    <div class="pdf-name">
+                        {{ name }}
+                    </div>
+                    <a href="/download/{{ path }}" class="btn btn-download">Download</a>
+                </li>
+                {% endfor %}
+            </ul>
+
+            {% if combined_pdf_path %}
+            <div style="margin-top: 20px; padding-top: 16px; border-top: 2px solid #e8eaf6;">
+                <h2>Combined PDF</h2>
+                <ul class="pdf-list">
+                    <li class="pdf-item">
+                        <div class="pdf-name">All_Employees_Payslips.pdf<small>All payslips in one document</small></div>
+                        <a href="/download/{{ combined_pdf_path }}" class="btn btn-download">Download</a>
+                    </li>
+                </ul>
+            </div>
+            {% endif %}
+
+            <div style="margin-top: 20px; padding-top: 16px; border-top: 2px solid #e8eaf6;">
+                <h2>Download All as ZIP</h2>
+                <div class="btn-row">
+                    <a href="/download_all/{{ output_dir }}" class="btn btn-zip">Download All (ZIP)</a>
+                </div>
+            </div>
+        </div>
+
+        {% if discrepancies %}
+        <div class="discrepancy-box">
+            <h3>&#9888; Salary Discrepancies Detected</h3>
+            <p style="font-size:0.9em;color:#bf360c;margin-bottom:12px;">The following employees have mismatches between provided and calculated salary values:</p>
+            {% for emp_name, discs in discrepancies %}
+            <div class="discrepancy-item">
+                <strong>{{ emp_name }}</strong>
+                {% for d in discs %}
+                    <br>&bull; {{ d }}
+                {% endfor %}
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <div class="btn-row">
+            <a href="/" class="btn btn-secondary">Upload Another File</a>
+        </div>
+    </div>
+</body>
+</html>

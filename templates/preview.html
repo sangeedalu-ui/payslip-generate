@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Preview Employees - Payslip Generator</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f0f2f5; color: #333; }
+        .header { background: linear-gradient(135deg, #1a237e, #283593); color: white; padding: 30px 20px; text-align: center; }
+        .header h1 { font-size: 1.8em; font-weight: 300; letter-spacing: 2px; }
+        .container { max-width: 1100px; margin: 20px auto; padding: 0 20px; }
+        .card { background: white; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); padding: 30px; margin-bottom: 20px; }
+        .card h2 { font-size: 1.3em; color: #1a237e; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 2px solid #e8eaf6; }
+
+        .flash { padding: 12px 16px; border-radius: 8px; margin-bottom: 20px; }
+        .flash-error { background: #ffebee; color: #c62828; }
+        .flash-success { background: #e8f5e9; color: #2e7d32; }
+
+        table { width: 100%; border-collapse: collapse; font-size: 0.85em; }
+        th { background: #1a237e; color: white; padding: 10px 8px; text-align: left; white-space: nowrap; }
+        td { padding: 8px; border-bottom: 1px solid #e0e0e0; }
+        tr:hover { background: #f5f7ff; }
+        tr:nth-child(even) { background: #fafbff; }
+
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px; }
+        .form-group { display: flex; flex-direction: column; }
+        .form-group label { font-weight: 600; color: #555; margin-bottom: 4px; font-size: 0.9em; }
+        .form-group input { padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 0.95em; }
+        .form-group input:focus { outline: none; border-color: #3f51b5; box-shadow: 0 0 0 2px rgba(63,81,181,0.2); }
+
+        .check-group { display: flex; align-items: center; gap: 8px; margin-top: 8px; }
+        .check-group label { font-weight: normal; color: #555; font-size: 0.9em; }
+
+        .btn { display: inline-block; padding: 12px 32px; border: none; border-radius: 8px; cursor: pointer; font-size: 1em; font-weight: 600; text-decoration: none; transition: all 0.3s; }
+        .btn-primary { background: #1a237e; color: white; }
+        .btn-primary:hover { background: #283593; transform: translateY(-1px); }
+        .btn-secondary { background: #e8eaf6; color: #1a237e; }
+        .btn-secondary:hover { background: #c5cae9; }
+        .btn-row { display: flex; gap: 12px; justify-content: center; margin-top: 20px; flex-wrap: wrap; }
+
+        .info-bar { display: flex; gap: 20px; margin-bottom: 16px; font-size: 0.95em; flex-wrap: wrap; }
+        .info-bar span { background: #e8eaf6; padding: 6px 14px; border-radius: 20px; color: #1a237e; font-weight: 500; }
+
+        .mapping-section { background: #f5f7ff; border-radius: 8px; padding: 16px; margin-bottom: 20px; }
+        .mapping-section h3 { font-size: 0.95em; color: #1a237e; margin-bottom: 8px; }
+        .mapping-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 6px; font-size: 0.82em; }
+        .mapping-item { display: flex; gap: 6px; }
+        .mapping-item .field { font-weight: 600; color: #333; }
+        .mapping-item .arrow { color: #999; }
+        .mapping-item .col { color: #3f51b5; }
+
+        .table-scroll { overflow-x: auto; }
+
+        @media (max-width: 768px) {
+            .form-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>PREVIEW EMPLOYEE DATA</h1>
+    </div>
+
+    <div class="container">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% for cat, msg in messages %}
+                <div class="flash flash-{{ cat }}">{{ msg }}</div>
+            {% endfor %}
+        {% endwith %}
+
+        <div class="card">
+            <h2>Detected Column Mapping</h2>
+            <div class="mapping-section">
+                <div class="mapping-grid">
+                    {% for field, col in mapping.items() %}
+                        <div class="mapping-item">
+                            <span class="field">{{ field }}</span>
+                            <span class="arrow">&larr;</span>
+                            <span class="col">{{ col }}</span>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div class="info-bar">
+                <span>File: {{ filename }}</span>
+                <span>Employees: {{ records|length }}</span>
+                {% if salary_months %}
+                    <span>Months found: {{ salary_months|length }}</span>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>Employee Data ({{ records|length }} records)</h2>
+            <div class="table-scroll">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            {% if 'employee_id' in mapping %}<th>Employee ID</th>{% endif %}
+                            <th>Employee Name</th>
+                            {% if 'designation' in mapping %}<th>Designation</th>{% endif %}
+                            {% if 'department' in mapping %}<th>Department</th>{% endif %}
+                            {% if 'salary_month' in mapping %}<th>Salary Month</th>{% endif %}
+                            {% if 'basic_salary' in mapping %}<th>Basic Salary</th>{% endif %}
+                            {% if 'bonus' in mapping %}<th>Bonus</th>{% endif %}
+                            {% if 'net_salary' in mapping %}<th>Net Salary</th>{% endif %}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for rec in records %}
+                        <tr>
+                            <td>{{ loop.index }}</td>
+                            {% if 'employee_id' in mapping %}<td>{{ rec.employee_id if rec.employee_id is defined and rec.employee_id|string != 'nan' else '-' }}</td>{% endif %}
+                            <td>{{ rec.employee_name if rec.employee_name is defined and rec.employee_name|string != 'nan' else 'N/A' }}</td>
+                            {% if 'designation' in mapping %}<td>{{ rec.designation if rec.designation is defined and rec.designation|string != 'nan' else '-' }}</td>{% endif %}
+                            {% if 'department' in mapping %}<td>{{ rec.department if rec.department is defined and rec.department|string != 'nan' else '-' }}</td>{% endif %}
+                            {% if 'salary_month' in mapping %}<td>{{ rec.salary_month if rec.salary_month is defined and rec.salary_month|string != 'nan' else '-' }}</td>{% endif %}
+                            {% if 'basic_salary' in mapping %}<td>{{ rec.basic_salary if rec.basic_salary is defined and rec.basic_salary|string != 'nan' else '-' }}</td>{% endif %}
+                            {% if 'bonus' in mapping %}<td>{{ rec.bonus if rec.bonus is defined and rec.bonus|string != 'nan' else '-' }}</td>{% endif %}
+                            {% if 'net_salary' in mapping %}<td>{{ rec.net_salary if rec.net_salary is defined and rec.net_salary|string != 'nan' else '-' }}</td>{% endif %}
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>Generate Payslips</h2>
+            <form action="/generate" method="POST">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Company Name</label>
+                        <input type="text" name="company_name" value="ResearchCorp India Pvt. Ltd.">
+                    </div>
+                    <div class="form-group">
+                        <label>Company Address</label>
+                        <input type="text" name="company_address" value="123 Innovation Park, Electronic City, Bengaluru - 560100">
+                    </div>
+                    <div class="form-group">
+                        <label>Phone</label>
+                        <input type="text" name="company_phone" value="+91 80 1234 5678">
+                    </div>
+                    <div class="form-group">
+                        <label>Email</label>
+                        <input type="text" name="company_email" value="hr@researchcorp.in">
+                    </div>
+                    <div class="form-group">
+                        <label>Website</label>
+                        <input type="text" name="company_website" value="www.researchcorp.in">
+                    </div>
+                    {% if salary_months %}
+                    <div class="form-group">
+                        <label>Filter by Salary Month</label>
+                        <select name="salary_month" style="padding:10px;border:1px solid #ddd;border-radius:6px;">
+                            <option value="">All Months</option>
+                            {% for m in salary_months %}
+                                <option value="{{ m }}">{{ m }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    {% else %}
+                        <input type="hidden" name="salary_month" value="">
+                    {% endif %}
+                </div>
+
+                <div class="check-group">
+                    <input type="checkbox" id="generate_all" name="generate_all">
+                    <label for="generate_all">Generate for all months (ignore filter)</label>
+                </div>
+                <div class="check-group">
+                    <input type="checkbox" id="generate_combined" name="generate_combined">
+                    <label for="generate_combined">Also generate a combined PDF with all payslips</label>
+                </div>
+
+                <div class="btn-row">
+                    <a href="/" class="btn btn-secondary">Back</a>
+                    <button type="submit" class="btn btn-primary">Generate Payslips</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</body>
+</html>
