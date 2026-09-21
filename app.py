@@ -16,7 +16,7 @@ from payslip_pdf import (
 )
 
 app = Flask(__name__)
-app.secret_key = os.urandom(24)
+app.secret_key = os.environ.get('SECRET_KEY', os.urandom(24))
 app.config['UPLOAD_FOLDER'] = os.path.join(os.path.dirname(__file__), 'uploads')
 app.config['OUTPUT_FOLDER'] = os.path.join(os.path.dirname(__file__), 'output')
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
