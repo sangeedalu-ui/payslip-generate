@@ -54,19 +54,19 @@ files = os.listdir(latest_dir)
 print(f'  Latest output dir: {latest}')
 print(f'  Files generated ({len(files)}): {files}')
 
-print('\n=== 6. Test download single via /download/<path> ===')
-pdf_path = os.path.join(latest_dir, files[0])
-r = client.get(f'/download/{pdf_path}')
+print('\n=== 6. Test download single via /download/<token>/<file> ===')
+token = latest
+r = client.get(f'/download/{token}/{files[0]}')
 print(f'  GET /download -> {r.status_code}, content-type: {r.content_type}')
 
 print('\n=== 7. Test combined PDF download ===')
 combined = os.path.join(latest_dir, 'All_Employees_Payslips.pdf')
 if os.path.exists(combined):
-    r = client.get(f'/download/{combined}')
+    r = client.get(f'/download/{token}/All_Employees_Payslips.pdf')
     print(f'  GET combined -> {r.status_code}, size: {len(r.data)} bytes')
 
 print('\n=== 8. Test ZIP download ===')
-r = client.get(f'/download_all/{latest_dir}')
+r = client.get(f'/download_all/{token}')
 print(f'  GET /download_all -> {r.status_code}, content-type: {r.content_type}')
 
 print('\nALL TESTS COMPLETE')

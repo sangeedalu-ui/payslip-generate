@@ -8,7 +8,7 @@ from functools import reduce
 import pandas as pd
 from flask import (
     Flask, render_template, request, send_file, redirect,
-    url_for, flash, session, jsonify
+    url_for, flash, session, jsonify, abort
 )
 from payslip_pdf import (
     generate_payslip_pdf, PayslipPDF, _build_earnings_lines,
@@ -340,7 +340,8 @@ def generate():
         flash('No employees found for the selected criteria.', 'error')
         return redirect(url_for('index'))
 
-    output_dir = os.path.join(app.config['OUTPUT_FOLDER'], uuid.uuid4().hex)
+    output_token = uuid.uuid4().hex
+    output_dir = os.path.join(app.config['OUTPUT_FOLDER'], output_token)
     os.makedirs(output_dir, exist_ok=True)
 
     pdf_files = []
@@ -360,7 +361,7 @@ def generate():
         filepath_pdf = os.path.join(output_dir, filename)
 
         generate_payslip_pdf(rec, salary, company, output_path=filepath_pdf)
-        pdf_files.append((filename, filepath_pdf))
+        pdf_files.append((filename, output_token))
 
     combined_pdf_path = None
     if generate_combined and len(records) > 1:
@@ -405,25 +406,34 @@ def generate():
 
     return render_template('download.html',
                            pdf_files=pdf_files,
+                           output_token=output_token,
                            combined_pdf_path=combined_pdf_path,
-                           discrepancies=discrepancies_list,
-                           output_dir=output_dir)
+                           discrepancies=discrepancies_list)
 
 
-@app.route('/download/<path:filepath>')
-def download_file(filepath):
-    return send_file(filepath, as_attachment=True)
+@app.route('/download/<token>/<path:filename>')
+def download_file(token, filename):
+    base = os.path.realpath(app.config['OUTPUT_FOLDER'])
+    full = os.path.realpath(os.path.join(base, token, filename))
+    if not full.startswith(base + os.sep) or not os.path.isfile(full):
+        abort(404)
+    return send_file(full, as_attachment=True)
 
 
-@app.route('/download_all/<path:output_dir>')
-def download_all(output_dir):
+@app.route('/download_all/<token>')
+def download_all(token):
     import zipfile
+    base = os.path.realpath(app.config['OUTPUT_FOLDER'])
+    target_dir = os.path.realpath(os.path.join(base, token))
+    if not target_dir.startswith(base + os.sep) or not os.path.isdir(target_dir):
+        abort(404)
     zip_buffer = io.BytesIO()
     with zipfile.ZipFile(zip_buffer, 'w', zipfile.ZIP_DEFLATED) as zf:
-        for f in os.listdir(output_dir):
+        for f in os.listdir(target_dir):
             if f.endswith('.pdf'):
-                full = os.path.join(output_dir, f)
-                zf.write(full, f)
+                full = os.path.join(target_dir, f)
+                if os.path.isfile(full):
+                    zf.write(full, f)
     zip_buffer.seek(0)
     return send_file(zip_buffer, mimetype='application/zip', as_attachment=True, download_name='Payslips.zip')
 

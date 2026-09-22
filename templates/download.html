@@ -56,12 +56,12 @@
 
             <h2>Download Individual Payslips</h2>
             <ul class="pdf-list">
-                {% for name, path in pdf_files %}
+                {% for name, token in pdf_files %}
                 <li class="pdf-item">
                     <div class="pdf-name">
                         {{ name }}
                     </div>
-                    <a href="/download/{{ path }}" class="btn btn-download">Download</a>
+                    <a href="/download/{{ token }}/{{ name }}" class="btn btn-download">Download</a>
                 </li>
                 {% endfor %}
             </ul>
@@ -72,7 +72,7 @@
                 <ul class="pdf-list">
                     <li class="pdf-item">
                         <div class="pdf-name">All_Employees_Payslips.pdf<small>All payslips in one document</small></div>
-                        <a href="/download/{{ combined_pdf_path }}" class="btn btn-download">Download</a>
+                        <a href="/download/{{ output_token }}/All_Employees_Payslips.pdf" class="btn btn-download">Download</a>
                     </li>
                 </ul>
             </div>
@@ -81,7 +81,7 @@
             <div style="margin-top: 20px; padding-top: 16px; border-top: 2px solid #e8eaf6;">
                 <h2>Download All as ZIP</h2>
                 <div class="btn-row">
-                    <a href="/download_all/{{ output_dir }}" class="btn btn-zip">Download All (ZIP)</a>
+                    <a href="/download_all/{{ output_token }}" class="btn btn-zip">Download All (ZIP)</a>
                 </div>
             </div>
         </div>
