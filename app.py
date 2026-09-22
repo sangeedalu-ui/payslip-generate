@@ -228,6 +228,11 @@ def safe_str(val, default=''):
     return str(val).strip()
 
 
+def _safe_filename_part(value, fallback):
+    clean = re.sub(r'[^A-Za-z0-9_-]+', '_', value).strip('_.')
+    return (clean[:40] or fallback)
+
+
 def format_date(val):
     if pd.isna(val) or val is None:
         return ''
@@ -355,8 +360,8 @@ def generate():
             emp_name = safe_str(rec.get('employee_name', 'Unknown'))
             discrepancies_list.append((emp_name, salary['discrepancies']))
 
-        emp_name_safe = safe_str(rec.get('employee_name', 'Unknown')).replace(' ', '_').replace('/', '_')
-        salary_month = safe_str(rec.get('salary_month', 'Unknown')).replace(' ', '_').replace('/', '_')
+        emp_name_safe = _safe_filename_part(safe_str(rec.get('employee_name', '')), 'Employee')
+        salary_month = _safe_filename_part(safe_str(rec.get('salary_month', '')), 'Month')
         filename = f'Payslip_{emp_name_safe}_{salary_month}.pdf'
         filepath_pdf = os.path.join(output_dir, filename)
 

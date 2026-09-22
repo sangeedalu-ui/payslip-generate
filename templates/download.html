@@ -61,7 +61,7 @@
                     <div class="pdf-name">
                         {{ name }}
                     </div>
-                    <a href="/download/{{ token }}/{{ name }}" class="btn btn-download">Download</a>
+                    <a href="/download/{{ token }}/{{ name|urlencode }}" class="btn btn-download">Download</a>
                 </li>
                 {% endfor %}
             </ul>

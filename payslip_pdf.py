@@ -98,10 +98,12 @@ class PayslipPDF(FPDF):
         self._register_fonts()
 
     def _register_fonts(self):
+        self._core_font = False
         font_regular = self._find_font(['arial.ttf', 'DejaVuSans.ttf'])
-        font_bold = self._find_font(['arialbd.ttf', 'DejaVuSans-Bold.ttf'])
         if not font_regular:
+            self._core_font = True
             return
+        font_bold = self._find_font(['arialbd.ttf', 'DejaVuSans-Bold.ttf'])
         self.add_font('PayslipFont', '', font_regular)
         self.add_font('PayslipFont', 'B', font_bold or font_regular)
 
@@ -120,7 +122,10 @@ class PayslipPDF(FPDF):
         return None
 
     def _set_font(self, style, size):
-        self.set_font('PayslipFont', style, size)
+        if getattr(self, '_core_font', False):
+            self.set_font('helvetica', style, size)
+        else:
+            self.set_font('PayslipFont', style, size)
 
     def _draw_header(self, company, salary_month):
         self.set_fill_color(*NAVY)
