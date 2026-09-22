@@ -254,8 +254,10 @@ def index():
     return render_template('index.html')
 
 
-@app.route('/upload', methods=['POST'])
+@app.route('/upload', methods=['GET', 'POST'])
 def upload():
+    if request.method == 'GET':
+        return redirect(url_for('index'))
     if 'file' not in request.files:
         flash('No file selected.', 'error')
         return redirect(url_for('index'))
@@ -303,8 +305,10 @@ def upload():
                            filename=file.filename)
 
 
-@app.route('/generate', methods=['POST'])
+@app.route('/generate', methods=['GET', 'POST'])
 def generate():
+    if request.method == 'GET':
+        return redirect(url_for('index'))
     filepath = session.get('filepath')
     if not filepath or not os.path.exists(filepath):
         flash('Please upload a file first.', 'error')
